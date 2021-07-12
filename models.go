@@ -8,3 +8,10 @@ type AccessToken struct {
 	State        string `json:"client_credentials"`
 	RefreshToken string `json:"refresh_token"`
 }
+type CommentRequest struct {
+	Comment Comment `json:"content"`
+}
+
+type Comment struct {
+	Message string `json:"raw"`
+}
