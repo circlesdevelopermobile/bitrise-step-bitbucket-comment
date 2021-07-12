@@ -1,31 +1,64 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
+	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-utils/log"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
-	"os/exec"
+	"strings"
 )
 
-func main() {
-	fmt.Println("This is the value specified for the input 'example_step_input':", os.Getenv("example_step_input"))
+// BitbucketConfig Client Credentials Grant
+// https://developer.atlassian.com/cloud/bitbucket/oauth-2/
+type BitbucketConfig struct {
+	BaseUrl  string          `env:"bitbucket_base_url,required"`
+	ClientId stepconf.Secret `env:"bitbucket_client_id,required"`
+	Secret   stepconf.Secret `env:"bitbucket_client_secret,required"`
+}
 
-	//
-	// --- Step Outputs: Export Environment Variables for other Steps:
-	// You can export Environment Variables for other Steps with
-	//  envman, which is automatically installed by `bitrise setup`.
-	// A very simple example:
-	cmdLog, err := exec.Command("bitrise", "envman", "add", "--key", "EXAMPLE_STEP_OUTPUT", "--value", "the value you want to share").CombinedOutput()
+func fail(format string, args ...interface{}) {
+	log.Errorf(format, args...)
+	os.Exit(1)
+}
+
+func obtainAccessToken(client *http.Client, config *BitbucketConfig) (*AccessToken, error) {
+	endpt := "https://bitbucket.org/site/oauth2/access_token"
+	payload := url.Values{}
+	payload.Set("grant_type", "client_credentials")
+
+	req, _ := http.NewRequest("POST", endpt, strings.NewReader(payload.Encode()))
+	req.SetBasicAuth(string(config.ClientId), string(config.Secret))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(req)
+
+	defer resp.Body.Close()
 	if err != nil {
-		fmt.Printf("Failed to expose output with envman, error: %#v | output: %s", err, cmdLog)
-		os.Exit(1)
+		return nil, err
 	}
-	// You can find more usage examples on envman's GitHub page
-	//  at: https://github.com/bitrise-io/envman
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var accessToken AccessToken
+	err = json.Unmarshal(body, &accessToken)
+	if err != nil {
+		return nil, err
+	}
+	return &accessToken, nil
+}
 
-	//
-	// --- Exit codes:
-	// The exit code of your Step is very important. If you return
-	//  with a 0 exit code `bitrise` will register your Step as "successful".
-	// Any non zero exit code will be registered as "failed" by `bitrise`.
-	os.Exit(0)
+func main() {
+	var cfg = &BitbucketConfig{}
+	httpClient := http.Client{}
+	if err := stepconf.Parse(cfg); err != nil {
+		fail("Error parson config: %s\n", err)
+	}
+	stepconf.Print(cfg)
+	accessToken, err := obtainAccessToken(&httpClient, cfg)
+	if err != nil {
+		fail("Unable to authenticate to bitbucket: %s\n", err)
+	}
 }
