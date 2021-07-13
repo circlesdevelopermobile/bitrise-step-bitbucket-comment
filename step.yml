@@ -64,25 +64,52 @@ toolkit:
 
 
 inputs:
-  - example_step_input: Default Value - you can leave this empty if you want to
+  - bitbucket_client_id:
     opts:
-      title: "Example Step Input"
-      summary: Summary. No more than 2-3 sentences.
+      category: Bitbucket
+      title: "Bitbucket Client ID"
       description: |
-        Description of this input.
-
+        Bitbucket Client ID.
         Can be Markdown formatted text.
       is_expand: true
       is_required: true
-      value_options: []
-  -
-
-outputs:
-  - EXAMPLE_STEP_OUTPUT:
+      is_sensitive: true
+  - bitbucket_client_secret:
     opts:
-      title: "Example Step Output"
-      summary: Summary. No more than 2-3 sentences.
+      category: Bitbucket
+      title: "Bitbucket Client Secret"
       description: |
-        Description of this output.
-
+        Bitbucket Client Secret.
         Can be Markdown formatted text.
+      is_expand: true
+      is_required: true
+      is_sensitive: true
+  - bitbucket_repo_slug:
+    opts:
+      category: Bitbucket
+      title: "Bitbucket Repo Slug"
+      description: |
+        Bitbucket Repo Slug.
+        Can be Markdown formatted text.
+      is_expand: true
+      is_required: true
+  - bitbucket_pr_id: "$BITRISE_PULL_REQUEST"
+    opts:
+      title: "Bitbucket Pull Request ID"
+      description: |
+        Bitbucket Pull Request ID.
+        Default: `$BITRISE_PULL_REQUEST`.
+      is_expand: true
+      is_required: true
+  - step_message_text:
+    opts:
+      title: "Message"
+      description: |
+        If Message File Path is not null, contents of that file will be used instead.
+      is_expand: true
+  - step_message_file:
+    opts:
+      title: "Message File Path"
+      description: |
+        Path to message file i.e. `$BITRISE_SOURCE_DIR/lint.txt`
+      is_expand: true
