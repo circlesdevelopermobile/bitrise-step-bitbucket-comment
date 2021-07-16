@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"os"
-	"strings"
 )
 
 // BitbucketConfig Client Credentials Grant
@@ -27,11 +26,7 @@ func (this *UserData) getMessage() (*string, error) {
 		if err != nil {
 			return nil, err
 		}
-		var builder strings.Builder
-		builder.WriteString("```\n")
-		builder.Write(b)
-		builder.WriteString("\n```")
-		out := builder.String()
+		out := string(b)
 		return &out, nil
 	} else {
 		return &this.Message, nil
